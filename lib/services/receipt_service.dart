@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 
 class ReceiptAttachmentResult {
   final String receiptId;
@@ -21,9 +20,8 @@ class ReceiptAttachmentResult {
 
 class ReceiptService {
   final ImagePicker _picker = ImagePicker();
-  final FirebaseStorage _storage = FirebaseStorage.instance;
 
-  /// Picks image from Camera or Gallery and saves locally
+  /// Picks image from Camera or Gallery and saves locally in device storage
   Future<ReceiptAttachmentResult?> pickAndSaveReceipt({
     required ImageSource source,
     required String householdId,
@@ -47,31 +45,13 @@ class ReceiptService {
       }
 
       final localPath = '${receiptsDir.path}/${receiptId}_${image.name}';
-      final savedFile = await File(image.path).copy(localPath);
-
-      // Attempt upload if connected
-      String? remoteUrl;
-      bool isUploaded = false;
-
-      try {
-        final storageRef = _storage.ref(
-          'households/$householdId/transactions/$transactionId/receipts/$receiptId.jpg',
-        );
-        final uploadTask = await storageRef.putFile(
-          savedFile,
-          SettableMetadata(contentType: 'image/jpeg'),
-        );
-        remoteUrl = await uploadTask.ref.getDownloadURL();
-        isUploaded = true;
-      } catch (e) {
-        debugPrint('Receipt saved locally; upload queued for later sync: $e');
-      }
+      await File(image.path).copy(localPath);
 
       return ReceiptAttachmentResult(
         receiptId: receiptId,
         localPath: localPath,
-        remoteUrl: remoteUrl,
-        isUploaded: isUploaded,
+        remoteUrl: null,
+        isUploaded: true, // Marked as available locally
       );
     } catch (e) {
       debugPrint('Error picking receipt: $e');
@@ -79,28 +59,15 @@ class ReceiptService {
     }
   }
 
-  /// Syncs any locally pending receipt to Cloud Storage
+  /// Syncs any locally pending receipt
   Future<String?> uploadPendingReceipt({
     required String localPath,
     required String householdId,
     required String transactionId,
     required String receiptId,
   }) async {
-    try {
-      final file = File(localPath);
-      if (!await file.exists()) return null;
-
-      final storageRef = _storage.ref(
-        'households/$householdId/transactions/$transactionId/receipts/$receiptId.jpg',
-      );
-      final uploadTask = await storageRef.putFile(
-        file,
-        SettableMetadata(contentType: 'image/jpeg'),
-      );
-      return await uploadTask.ref.getDownloadURL();
-    } catch (e) {
-      debugPrint('Error uploading pending receipt: $e');
-      return null;
-    }
+    // Local storage only, returns local path
+    return localPath;
   }
 }
+

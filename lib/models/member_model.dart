@@ -7,23 +7,20 @@ enum MemberRole {
   String get displayName {
     switch (this) {
       case MemberRole.owner:
-        return 'Owner';
+        return 'Owner / Admin';
       case MemberRole.admin:
-        return 'Admin';
       case MemberRole.editor:
-        return 'Editor';
       case MemberRole.viewer:
-        return 'Viewer';
+        return 'Admin';
     }
   }
 
-  bool get canWriteTransactions =>
-      this == MemberRole.owner || this == MemberRole.admin || this == MemberRole.editor;
+  // In Personal and Family Hisab, all members have full Admin privileges
+  bool get canWriteTransactions => true;
 
-  bool get canManageMembers =>
-      this == MemberRole.owner || this == MemberRole.admin;
+  bool get canManageMembers => true;
 
-  bool get canDeleteHousehold => this == MemberRole.owner;
+  bool get canDeleteHousehold => true;
 }
 
 class MemberModel {
@@ -55,12 +52,13 @@ class MemberModel {
   }
 
   factory MemberModel.fromMap(Map<String, dynamic> map, {String? uid}) {
-    MemberRole parsedRole = MemberRole.editor;
+    MemberRole parsedRole = MemberRole.admin;
     final r = (map['role'] as String?)?.toUpperCase();
-    if (r == 'OWNER') parsedRole = MemberRole.owner;
-    if (r == 'ADMIN') parsedRole = MemberRole.admin;
-    if (r == 'EDITOR') parsedRole = MemberRole.editor;
-    if (r == 'VIEWER') parsedRole = MemberRole.viewer;
+    if (r == 'OWNER') {
+      parsedRole = MemberRole.owner;
+    } else {
+      parsedRole = MemberRole.admin;
+    }
 
     return MemberModel(
       uid: uid ?? map['uid'] as String? ?? '',

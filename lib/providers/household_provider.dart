@@ -85,14 +85,14 @@ class HouseholdNotifier extends StateNotifier<HouseholdState> {
                 uid: 'member_2',
                 displayName: 'Rahul',
                 email: 'rahul@family.com',
-                role: MemberRole.editor,
+                role: MemberRole.admin,
                 joinedAt: DateTime.now(),
               ),
               MemberModel(
                 uid: 'member_3',
                 displayName: 'Pooja',
                 email: 'pooja@family.com',
-                role: MemberRole.viewer,
+                role: MemberRole.admin,
                 joinedAt: DateTime.now(),
               ),
             ],
@@ -104,7 +104,7 @@ class HouseholdNotifier extends StateNotifier<HouseholdState> {
     state = state.copyWith(activeHousehold: target);
   }
 
-  Future<void> addMember({required String email, required MemberRole role}) async {
+  Future<void> addMember({required String email, MemberRole role = MemberRole.admin}) async {
     if (state.members.length >= 4) {
       throw Exception('Hisab Space limit reached (Maximum 4 members allowed)');
     }
@@ -113,7 +113,7 @@ class HouseholdNotifier extends StateNotifier<HouseholdState> {
       uid: const Uuid().v4(),
       displayName: email.split('@').first,
       email: email,
-      role: role,
+      role: MemberRole.admin,
       joinedAt: DateTime.now(),
     );
 

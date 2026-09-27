@@ -20,13 +20,11 @@ service cloud.firestore {
     }
 
     function isHouseholdEditor(householdId) {
-      return isHouseholdMember(householdId) && 
-        (getMemberRole(householdId) in ['OWNER', 'ADMIN', 'EDITOR']);
+      return isHouseholdMember(householdId);
     }
 
     function isHouseholdAdmin(householdId) {
-      return isHouseholdMember(householdId) && 
-        (getMemberRole(householdId) in ['OWNER', 'ADMIN']);
+      return isHouseholdMember(householdId);
     }
 
     function isHouseholdOwner(householdId) {
