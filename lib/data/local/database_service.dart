@@ -21,9 +21,38 @@ class DatabaseService {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _createDB,
+      onUpgrade: _upgradeDB,
     );
+  }
+
+  Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      final columns = [
+        'ALTER TABLE transactions ADD COLUMN householdId TEXT DEFAULT "default_household"',
+        'ALTER TABLE transactions ADD COLUMN amountMinor INTEGER DEFAULT 0',
+        'ALTER TABLE transactions ADD COLUMN currency TEXT DEFAULT "INR"',
+        'ALTER TABLE transactions ADD COLUMN createdBy TEXT DEFAULT "user"',
+        'ALTER TABLE transactions ADD COLUMN createdByName TEXT DEFAULT "You"',
+        'ALTER TABLE transactions ADD COLUMN updatedBy TEXT DEFAULT "user"',
+        'ALTER TABLE transactions ADD COLUMN deviceId TEXT DEFAULT "device_local"',
+        'ALTER TABLE transactions ADD COLUMN version INTEGER DEFAULT 1',
+        'ALTER TABLE transactions ADD COLUMN isDeleted INTEGER DEFAULT 0',
+        'ALTER TABLE transactions ADD COLUMN deletedAt TEXT',
+        'ALTER TABLE transactions ADD COLUMN deletedBy TEXT',
+        'ALTER TABLE transactions ADD COLUMN clientOperationId TEXT',
+        'ALTER TABLE transactions ADD COLUMN receiptId TEXT',
+        'ALTER TABLE transactions ADD COLUMN receiptUrl TEXT',
+        'ALTER TABLE transactions ADD COLUMN localReceiptPath TEXT',
+        'ALTER TABLE transactions ADD COLUMN isSynced INTEGER DEFAULT 1',
+      ];
+      for (final sql in columns) {
+        try {
+          await db.execute(sql);
+        } catch (_) {}
+      }
+    }
   }
 
   Future<void> _createDB(Database db, int version) async {
@@ -41,8 +70,11 @@ class DatabaseService {
     await db.execute('''
       CREATE TABLE transactions (
         id TEXT PRIMARY KEY,
+        householdId TEXT DEFAULT 'default_household',
         type TEXT NOT NULL,
+        amountMinor INTEGER NOT NULL DEFAULT 0,
         amount REAL NOT NULL,
+        currency TEXT DEFAULT 'INR',
         categoryId TEXT NOT NULL,
         categoryName TEXT NOT NULL,
         title TEXT NOT NULL,
@@ -50,6 +82,19 @@ class DatabaseService {
         dateTime TEXT NOT NULL,
         createdAt TEXT NOT NULL,
         updatedAt TEXT NOT NULL,
+        createdBy TEXT DEFAULT 'user',
+        createdByName TEXT DEFAULT 'You',
+        updatedBy TEXT DEFAULT 'user',
+        deviceId TEXT DEFAULT 'device_local',
+        version INTEGER DEFAULT 1,
+        isDeleted INTEGER NOT NULL DEFAULT 0,
+        deletedAt TEXT,
+        deletedBy TEXT,
+        clientOperationId TEXT,
+        receiptId TEXT,
+        receiptUrl TEXT,
+        localReceiptPath TEXT,
+        isSynced INTEGER NOT NULL DEFAULT 1,
         isTemplate INTEGER NOT NULL DEFAULT 0,
         FOREIGN KEY (categoryId) REFERENCES categories (id) ON DELETE SET DEFAULT
       )
@@ -327,14 +372,22 @@ class DatabaseService {
   }
 
   Future<void> seedInitialData() async {
-    final db = await database;
-    final existingTx = await db.query('transactions', limit: 1);
-    if (existingTx.isEmpty) {
-      final batch = db.batch();
-      for (final tx in SeedData.sampleTransactions) {
-        batch.insert('transactions', tx.toMap());
+    try {
+      final db = await database;
+      final existingTx = await db.query('transactions', limit: 1);
+      if (existingTx.isEmpty) {
+        final batch = db.batch();
+        for (final tx in SeedData.sampleTransactions) {
+          batch.insert(
+            'transactions',
+            tx.toMap(),
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
+        }
+        await batch.commit(noResult: true);
       }
-      await batch.commit(noResult: true);
+    } catch (e) {
+      debugPrint('seedInitialData notice: $e');
     }
   }
 
