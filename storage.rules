@@ -1,0 +1,27 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isHouseholdMember(householdId) {
+      return isAuthenticated() && 
+        firestore.exists(/databases/(default)/documents/households/$(householdId)/members/$(request.auth.uid));
+    }
+
+    function isHouseholdEditor(householdId) {
+      return isHouseholdMember(householdId) && 
+        (firestore.get(/databases/(default)/documents/households/$(householdId)/members/$(request.auth.uid)).data.role in ['OWNER', 'ADMIN', 'EDITOR']);
+    }
+
+    match /households/{householdId}/transactions/{transactionId}/receipts/{receiptId} {
+      allow read: if isHouseholdMember(householdId);
+      allow write: if isHouseholdEditor(householdId)
+                   && request.resource.size < 10 * 1024 * 1024 // 10MB max
+                   && request.resource.contentType.matches('image/.*');
+      allow delete: if isHouseholdEditor(householdId);
+    }
+  }
+}

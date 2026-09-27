@@ -1,0 +1,91 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isUser(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
+    }
+
+    function getMemberRole(householdId) {
+      return get(/databases/$(database)/documents/households/$(householdId)/members/$(request.auth.uid)).data.role;
+    }
+
+    function isHouseholdMember(householdId) {
+      return isAuthenticated() && exists(/databases/$(database)/documents/households/$(householdId)/members/$(request.auth.uid));
+    }
+
+    function isHouseholdEditor(householdId) {
+      return isHouseholdMember(householdId) && 
+        (getMemberRole(householdId) in ['OWNER', 'ADMIN', 'EDITOR']);
+    }
+
+    function isHouseholdAdmin(householdId) {
+      return isHouseholdMember(householdId) && 
+        (getMemberRole(householdId) in ['OWNER', 'ADMIN']);
+    }
+
+    function isHouseholdOwner(householdId) {
+      return isHouseholdMember(householdId) && 
+        getMemberRole(householdId) == 'OWNER';
+    }
+
+    // Users collection
+    match /users/{uid} {
+      allow read, write: if isUser(uid);
+    }
+
+    // Households / Hisab Spaces
+    match /households/{householdId} {
+      allow read: if isHouseholdMember(householdId);
+      allow create: if isAuthenticated();
+      allow update: if isHouseholdAdmin(householdId);
+      allow delete: if isHouseholdOwner(householdId);
+
+      // Members subcollection (Max 4 members)
+      match /members/{memberUid} {
+        allow read: if isHouseholdMember(householdId);
+        allow create, update: if isHouseholdAdmin(householdId) || isHouseholdOwner(householdId);
+        allow delete: if isHouseholdOwner(householdId) || (isHouseholdAdmin(householdId) && getMemberRole(householdId) != 'OWNER');
+      }
+
+      // Transactions subcollection
+      match /transactions/{transactionId} {
+        allow read: if isHouseholdMember(householdId);
+        allow create: if isHouseholdEditor(householdId);
+        allow update: if isHouseholdEditor(householdId);
+        allow delete: if isHouseholdAdmin(householdId);
+      }
+
+      // Categories subcollection
+      match /categories/{categoryId} {
+        allow read: if isHouseholdMember(householdId);
+        allow create, update: if isHouseholdEditor(householdId);
+        allow delete: if isHouseholdAdmin(householdId);
+      }
+
+      // Audit Logs subcollection (Append-only immutable)
+      match /auditLogs/{logId} {
+        allow read: if isHouseholdMember(householdId);
+        allow create: if isHouseholdEditor(householdId);
+        allow update, delete: if false; // Immutable audit trail
+      }
+
+      // Invites subcollection
+      match /invites/{inviteId} {
+        allow read: if isHouseholdMember(householdId);
+        allow create, update, delete: if isHouseholdAdmin(householdId);
+      }
+
+      // Settings subcollection
+      match /settings/{settingId} {
+        allow read: if isHouseholdMember(householdId);
+        allow write: if isHouseholdAdmin(householdId);
+      }
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "323597227756",
+    "firebase_url": "https://my-hisab-72265-default-rtdb.firebaseio.com",
+    "project_id": "my-hisab-72265",
+    "storage_bucket": "my-hisab-72265.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:323597227756:android:af69bd4a234d367a64f7c9",
+        "android_client_info": {
+          "package_name": "com.myhisab.yogesh"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD_qBlQ2NUuuyuXiNfQdqN7SjkXug-819A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
