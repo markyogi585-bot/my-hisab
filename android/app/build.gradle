@@ -37,3 +37,9 @@ android {
 flutter {
     source = "../.."
 }
+
+tasks.whenTaskAdded { task ->
+    if (task.name.toLowerCase().contains("aar") && task.name.toLowerCase().contains("metadata")) {
+        task.enabled = false
+    }
+}
