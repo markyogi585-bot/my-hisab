@@ -104,6 +104,31 @@ class HouseholdNotifier extends StateNotifier<HouseholdState> {
     state = state.copyWith(activeHousehold: target);
   }
 
+  void switchHouseholdById(String id) {
+    final found = state.availableHouseholds.firstWhere(
+      (h) => h.id == id,
+      orElse: () => state.activeHousehold,
+    );
+    state = state.copyWith(activeHousehold: found);
+  }
+
+  void createHousehold({required String name, required HouseholdType type}) {
+    final newSpace = HouseholdModel(
+      id: const Uuid().v4(),
+      name: name,
+      type: type,
+      openingBalanceMinor: 0,
+      createdBy: 'current_user',
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+      memberCount: 1,
+    );
+    state = state.copyWith(
+      activeHousehold: newSpace,
+      availableHouseholds: [...state.availableHouseholds, newSpace],
+    );
+  }
+
   Future<void> addMember({required String email, MemberRole role = MemberRole.admin}) async {
     if (state.members.length >= 4) {
       throw Exception('Hisab Space limit reached (Maximum 4 members allowed)');

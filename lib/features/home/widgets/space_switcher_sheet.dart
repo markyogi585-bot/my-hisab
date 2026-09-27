@@ -82,7 +82,7 @@ class SpaceSwitcherSheet extends ConsumerWidget {
                   ? AppColors.primary.withOpacity(0.12)
                   : Colors.white.withOpacity(0.04),
               onTap: () {
-                ref.read(householdProvider.notifier).switchHousehold(space.id);
+                ref.read(householdProvider.notifier).switchHousehold(space);
                 Navigator.pop(context);
               },
               child: Row(
