@@ -54,11 +54,12 @@ class TransactionModel {
   final bool isSynced;
   final bool isTemplate;
 
-  const TransactionModel({
+  TransactionModel({
     required this.id,
     this.householdId = 'default_household',
     required this.type,
-    required this.amountMinor,
+    int? amountMinor,
+    double? amount,
     this.currency = 'INR',
     required this.categoryId,
     required this.categoryName,
@@ -75,13 +76,14 @@ class TransactionModel {
     this.isDeleted = false,
     this.deletedAt,
     this.deletedBy,
-    required this.clientOperationId,
+    String? clientOperationId,
     this.receiptId,
     this.receiptUrl,
     this.localReceiptPath,
     this.isSynced = true,
     this.isTemplate = false,
-  });
+  })  : amountMinor = amountMinor ?? ((amount ?? 0) * 100).round(),
+        clientOperationId = clientOperationId ?? id;
 
   /// Rupee representation computed from minor units
   double get amount => amountMinor / 100.0;
