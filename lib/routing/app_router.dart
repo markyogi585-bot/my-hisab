@@ -7,8 +7,9 @@ import '../features/home/screens/home_screen.dart';
 import '../features/reports/screens/reports_screen.dart';
 import '../features/settings/screens/initial_balance_screen.dart';
 import '../features/settings/screens/settings_screen.dart';
-import '../features/transactions/screens/transaction_detail_screen.dart';
 import '../features/transactions/screens/transactions_screen.dart';
+import '../features/transactions/screens/transaction_detail_screen.dart';
+import '../features/recycle_bin/screens/recycle_bin_screen.dart';
 import '../widgets/app_bottom_nav_bar.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -131,6 +132,11 @@ GoRouter createRouter({required bool isFirstLaunch}) {
         path: '/export',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const ExportScreen(),
+      ),
+      GoRoute(
+        path: '/recycle-bin',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const RecycleBinScreen(),
       ),
     ],
   );

@@ -110,6 +110,11 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                 ),
             ],
           ),
+          IconButton(
+            icon: const Icon(Icons.delete_outline_rounded, color: Colors.white70),
+            tooltip: 'Recycle Bin',
+            onPressed: () => context.push('/recycle-bin'),
+          ),
           const SizedBox(width: 6),
         ],
       ),

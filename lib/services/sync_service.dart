@@ -86,6 +86,64 @@ class SyncService {
     }
   }
 
+  /// Push deletion to Firestore and store in deleted_transactions archive
+  Future<void> syncDeleteTransaction(String householdId, TransactionModel tx, {required String deletedBy}) async {
+    try {
+      final now = DateTime.now();
+      // 1. Mark as deleted in transactions subcollection
+      await _firestore
+          .collection('households')
+          .doc(householdId)
+          .collection('transactions')
+          .doc(tx.id)
+          .set({
+        'isDeleted': true,
+        'deletedAt': now.toIso8601String(),
+        'deletedBy': deletedBy,
+      }, SetOptions(merge: true));
+
+      // 2. Also archive into dedicated deleted_transactions collection for audit
+      await _firestore
+          .collection('households')
+          .doc(householdId)
+          .collection('deleted_transactions')
+          .doc(tx.id)
+          .set({
+        ...tx.toMap(),
+        'isDeleted': true,
+        'deletedAt': now.toIso8601String(),
+        'deletedBy': deletedBy,
+      }, SetOptions(merge: true));
+    } catch (e) {
+      debugPrint('Cloud sync delete fallback (saved offline): $e');
+    }
+  }
+
+  /// Push restore to Firestore
+  Future<void> syncRestoreTransaction(String householdId, String txId) async {
+    try {
+      await _firestore
+          .collection('households')
+          .doc(householdId)
+          .collection('transactions')
+          .doc(txId)
+          .update({
+        'isDeleted': false,
+        'deletedAt': null,
+        'deletedBy': null,
+      });
+
+      await _firestore
+          .collection('households')
+          .doc(householdId)
+          .collection('deleted_transactions')
+          .doc(txId)
+          .delete();
+    } catch (e) {
+      debugPrint('Cloud sync restore fallback: $e');
+    }
+  }
+
   /// Appends an immutable audit log to Firestore
   Future<void> recordAuditLog(AuditLogModel log) async {
     try {

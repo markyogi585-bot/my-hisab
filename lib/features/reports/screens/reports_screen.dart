@@ -6,6 +6,7 @@ import '../../../core/utils/date_formatter.dart';
 import '../../../providers/reports_provider.dart';
 import '../widgets/category_donut_chart.dart';
 import '../widgets/income_expense_trend_chart.dart';
+import '../../../widgets/liquid_glass_card.dart';
 
 class ReportsScreen extends ConsumerWidget {
   const ReportsScreen({super.key});
@@ -140,13 +141,8 @@ class ReportsScreen extends ConsumerWidget {
                   const SizedBox(height: 20),
 
                   // Trend Chart
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceCard,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppColors.border.withOpacity(0.5)),
-                    ),
+                  LiquidGlassCard(
+                    padding: const EdgeInsets.all(18),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -156,7 +152,7 @@ class ReportsScreen extends ConsumerWidget {
                             const Text(
                               'Cashflow Trend',
                               style: TextStyle(
-                                fontSize: 15,
+                                fontSize: 16,
                                 fontWeight: FontWeight.w700,
                                 color: Colors.white,
                               ),
@@ -182,13 +178,8 @@ class ReportsScreen extends ConsumerWidget {
                   const SizedBox(height: 20),
 
                   // Category Breakdown Donut Chart
-                  Container(
+                  LiquidGlassCard(
                     padding: const EdgeInsets.all(18),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceCard,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppColors.border.withOpacity(0.5)),
-                    ),
                     child: CategoryDonutChart(
                       items: data.categoryBreakdown,
                       totalExpense: data.totalExpense,

@@ -136,7 +136,52 @@ class DatabaseService {
     );
   }
 
-  Future<int> deleteTransaction(String id) async {
+  Future<int> deleteTransaction(String id, {String deletedBy = 'You'}) async {
+    return await softDeleteTransaction(id, deletedBy: deletedBy);
+  }
+
+  Future<int> softDeleteTransaction(String id, {String deletedBy = 'You'}) async {
+    final db = await database;
+    final now = DateTime.now().toIso8601String();
+    return await db.update(
+      'transactions',
+      {
+        'isDeleted': 1,
+        'deletedAt': now,
+        'deletedBy': deletedBy,
+        'isSynced': 0,
+      },
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<int> restoreTransaction(String id) async {
+    final db = await database;
+    return await db.update(
+      'transactions',
+      {
+        'isDeleted': 0,
+        'deletedAt': null,
+        'deletedBy': null,
+        'isSynced': 0,
+      },
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<List<TransactionModel>> getDeletedTransactions() async {
+    final db = await database;
+    final maps = await db.query(
+      'transactions',
+      where: 'isDeleted = 1',
+      orderBy: 'deletedAt DESC',
+    );
+    return maps.map((m) => TransactionModel.fromMap(m)).toList();
+  }
+
+  Future<int> permanentlyDeleteTransaction(String id) async {
     final db = await database;
     return await db.delete(
       'transactions',
@@ -159,11 +204,11 @@ class DatabaseService {
     return null;
   }
 
-  Future<List<TransactionModel>> getRecentTransactions({int limit = 5}) async {
+  Future<List<TransactionModel>> getRecentTransactions({int limit = 10}) async {
     final db = await database;
     final maps = await db.query(
       'transactions',
-      where: 'isTemplate = 0',
+      where: 'isTemplate = 0 AND isDeleted = 0',
       orderBy: 'dateTime DESC, createdAt DESC',
       limit: limit,
     );
@@ -175,7 +220,7 @@ class DatabaseService {
   }) async {
     final db = await database;
 
-    final whereClauses = <String>['isTemplate = 0'];
+    final whereClauses = <String>['isTemplate = 0', 'isDeleted = 0'];
     final whereArgs = <dynamic>[];
 
     // Filter by Type

@@ -3,11 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../providers/balance_provider.dart';
+import '../../../providers/household_provider.dart';
 import '../../../providers/transaction_provider.dart';
+import '../../../widgets/liquid_glass_card.dart';
 import '../widgets/balance_card.dart';
 import '../widgets/cashflow_summary_card.dart';
 import '../widgets/quick_actions_row.dart';
-import '../widgets/recent_transactions_list.dart';
+import '../widgets/daily_grouped_transactions.dart';
+import '../widgets/space_switcher_sheet.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -15,7 +18,8 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final balanceAsync = ref.watch(balanceProvider);
-    final recentTxAsync = ref.watch(recentTransactionsProvider);
+    final txListAsync = ref.watch(transactionListProvider);
+    final householdState = ref.watch(householdProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -33,27 +37,28 @@ class HomeScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // App Top Bar: Logo, App Title, Tagline, Notification Bell
+                // Top Navigation Bar
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
+                    // Brand Icon & App Title
                     Row(
                       children: [
                         Container(
-                          width: 42,
-                          height: 42,
+                          width: 44,
+                          height: 44,
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(14),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.primary.withOpacity(0.35),
-                                blurRadius: 10,
-                                offset: const Offset(0, 3),
+                                color: AppColors.primary.withOpacity(0.4),
+                                blurRadius: 14,
+                                offset: const Offset(0, 4),
                               ),
                             ],
                           ),
                           child: ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(14),
                             child: Image.asset(
                               'assets/icons/app_logo.png',
                               fit: BoxFit.cover,
@@ -61,83 +66,112 @@ class HomeScreen extends ConsumerWidget {
                                 decoration: const BoxDecoration(
                                   gradient: LinearGradient(
                                     colors: [Color(0xFF3B82F6), Color(0xFF8B5CF6)],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
                                   ),
                                 ),
                                 child: const Icon(
                                   Icons.account_balance_wallet_rounded,
                                   color: Colors.white,
-                                  size: 22,
+                                  size: 24,
                                 ),
                               ),
                             ),
                           ),
                         ),
                         const SizedBox(width: 12),
-                        const Column(
+                        Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
+                            const Text(
                               'My Hisab',
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w800,
                                 color: Colors.white,
-                                letterSpacing: -0.3,
+                                letterSpacing: -0.4,
                               ),
                             ),
-                            Text(
-                              'Track • Manage • Grow',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w400,
-                                color: AppColors.textSecondary,
+                            // Space Switcher button
+                            GestureDetector(
+                              onTap: () {
+                                showModalBottomSheet(
+                                  context: context,
+                                  isScrollControlled: true,
+                                  backgroundColor: Colors.transparent,
+                                  builder: (_) => const SpaceSwitcherSheet(),
+                                );
+                              },
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 6,
+                                    height: 6,
+                                    decoration: const BoxDecoration(
+                                      color: AppColors.income,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 5),
+                                  Text(
+                                    householdState.activeHousehold.name,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.accentCyan,
+                                    ),
+                                  ),
+                                  const Icon(
+                                    Icons.arrow_drop_down_rounded,
+                                    color: AppColors.accentCyan,
+                                    size: 18,
+                                  ),
+                                ],
                               ),
                             ),
                           ],
                         ),
                       ],
                     ),
-                    // Notification Bell Icon with Badge
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceCard,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: AppColors.border.withOpacity(0.6),
+
+                    // Top Actions: Recycle Bin & Cloud Sync indicator
+                    Row(
+                      children: [
+                        // Recycle Bin Action
+                        LiquidGlassCard(
+                          padding: const EdgeInsets.all(8),
+                          borderRadius: 14,
+                          onTap: () => context.push('/recycle-bin'),
+                          child: const Icon(
+                            Icons.delete_outline_rounded,
+                            color: Colors.white70,
+                            size: 20,
+                          ),
                         ),
-                      ),
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          const Icon(
-                            Icons.notifications_none_rounded,
-                            color: Colors.white,
-                            size: 22,
+                        const SizedBox(width: 10),
+                        // Space Settings / Household Action
+                        LiquidGlassCard(
+                          padding: const EdgeInsets.all(8),
+                          borderRadius: 14,
+                          onTap: () {
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              builder: (_) => const SpaceSwitcherSheet(),
+                            );
+                          },
+                          child: const Icon(
+                            Icons.groups_outlined,
+                            color: Colors.white70,
+                            size: 20,
                           ),
-                          Positioned(
-                            top: 10,
-                            right: 10,
-                            child: Container(
-                              width: 7,
-                              height: 7,
-                              decoration: const BoxDecoration(
-                                color: AppColors.expense,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 18),
 
-                // Main Balance Card
+                // Main Balance Card (Liquid Holographic Glass)
                 balanceAsync.when(
                   data: (balanceState) => BalanceCard(
                     balanceState: balanceState,
@@ -157,7 +191,7 @@ class HomeScreen extends ConsumerWidget {
                   ),
                   error: (_, __) => const SizedBox(),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 14),
 
                 // Cashflow Summary (Income / Expense)
                 balanceAsync.when(
@@ -169,20 +203,20 @@ class HomeScreen extends ConsumerWidget {
                   loading: () => const SizedBox(height: 80),
                   error: (_, __) => const SizedBox(),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 18),
 
                 // Quick Actions Row
                 QuickActionsRow(
                   onAddTransaction: () => context.push('/add-transaction'),
                   onReports: () => context.go('/reports'),
-                  onExport: () => context.push('/export'),
-                  onMore: () => context.push('/categories'),
+                  onRecycleBin: () => context.push('/recycle-bin'),
+                  onCategories: () => context.push('/categories'),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 22),
 
-                // Recent Transactions List
-                recentTxAsync.when(
-                  data: (txList) => RecentTransactionsList(
+                // Daily Grouped Transactions Feed
+                txListAsync.when(
+                  data: (txList) => DailyGroupedTransactions(
                     transactions: txList,
                     onSeeAll: () => context.go('/transactions'),
                     onTransactionTap: (tx) => context.push('/transaction-detail/${tx.id}'),
@@ -193,12 +227,14 @@ class HomeScreen extends ConsumerWidget {
                       child: CircularProgressIndicator(color: AppColors.primary),
                     ),
                   ),
-                  error: (e, _) => Text(
-                    'Error: $e',
-                    style: const TextStyle(color: AppColors.expense),
+                  error: (e, _) => Center(
+                    child: Text(
+                      'Notice: $e',
+                      style: const TextStyle(color: AppColors.textSecondary),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 90), // Bottom padding for floating navigation bar
+                const SizedBox(height: 90), // Bottom padding for navigation bar
               ],
             ),
           ),

@@ -4,15 +4,15 @@ import '../../../core/constants/app_colors.dart';
 class QuickActionsRow extends StatelessWidget {
   final VoidCallback onAddTransaction;
   final VoidCallback onReports;
-  final VoidCallback onExport;
-  final VoidCallback onMore;
+  final VoidCallback onRecycleBin;
+  final VoidCallback onCategories;
 
   const QuickActionsRow({
     super.key,
     required this.onAddTransaction,
     required this.onReports,
-    required this.onExport,
-    required this.onMore,
+    required this.onRecycleBin,
+    required this.onCategories,
   });
 
   @override
@@ -21,25 +21,48 @@ class QuickActionsRow extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         _buildActionItem(
-          label: 'Add\nTransaction',
-          icon: Icons.add_rounded,
-          isPrimary: true,
+          label: 'Add Entry',
+          icon: Icons.add_circle_outline_rounded,
+          gradient: const LinearGradient(
+            colors: [Color(0xFF3B82F6), Color(0xFF6366F1)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          iconColor: Colors.white,
           onTap: onAddTransaction,
         ),
         _buildActionItem(
-          label: 'Reports',
-          icon: Icons.bar_chart_rounded,
+          label: 'Analytics',
+          icon: Icons.auto_graph_rounded,
+          gradient: const LinearGradient(
+            colors: [Color(0xFF10B981), Color(0xFF059669)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          iconColor: Colors.white,
           onTap: onReports,
         ),
         _buildActionItem(
-          label: 'Export',
-          icon: Icons.description_outlined,
-          onTap: onExport,
+          label: 'Recycle Bin',
+          icon: Icons.delete_outline_rounded,
+          gradient: const LinearGradient(
+            colors: [Color(0xFFF43F5E), Color(0xFFBE123C)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          iconColor: Colors.white,
+          onTap: onRecycleBin,
         ),
         _buildActionItem(
-          label: 'More',
-          icon: Icons.grid_view_rounded,
-          onTap: onMore,
+          label: 'Categories',
+          icon: Icons.category_outlined,
+          gradient: const LinearGradient(
+            colors: [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          iconColor: Colors.white,
+          onTap: onCategories,
         ),
       ],
     );
@@ -48,68 +71,54 @@ class QuickActionsRow extends StatelessWidget {
   Widget _buildActionItem({
     required String label,
     required IconData icon,
+    required Gradient gradient,
+    required Color iconColor,
     required VoidCallback onTap,
-    bool isPrimary = false,
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
-        width: 76,
-        padding: const EdgeInsets.symmetric(vertical: 12),
+        width: 80,
+        padding: const EdgeInsets.symmetric(vertical: 8),
         child: Column(
           children: [
             Container(
-              width: 54,
-              height: 54,
+              width: 52,
+              height: 52,
               decoration: BoxDecoration(
-                gradient: isPrimary
-                    ? const LinearGradient(
-                        colors: [Color(0xFF3B82F6), Color(0xFF6366F1)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      )
-                    : null,
-                color: isPrimary ? null : AppColors.surfaceCard,
-                borderRadius: BorderRadius.circular(18),
+                gradient: gradient,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.3),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
                 border: Border.all(
-                  color: isPrimary
-                      ? AppColors.primary.withOpacity(0.5)
-                      : AppColors.border.withOpacity(0.6),
+                  color: Colors.white.withOpacity(0.2),
                   width: 1,
                 ),
-                boxShadow: isPrimary
-                    ? [
-                        BoxShadow(
-                          color: AppColors.primary.withOpacity(0.4),
-                          blurRadius: 14,
-                          offset: const Offset(0, 4),
-                        ),
-                      ]
-                    : [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
               ),
               child: Icon(
                 icon,
-                color: isPrimary ? Colors.white : AppColors.textSecondary,
+                color: iconColor,
                 size: 24,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               label,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: isPrimary ? FontWeight.w600 : FontWeight.w500,
-                color: isPrimary ? Colors.white : AppColors.textSecondary,
-                height: 1.15,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Colors.white70,
+                letterSpacing: -0.2,
               ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),

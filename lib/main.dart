@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'core/constants/app_constants.dart';
 import 'core/constants/app_colors.dart';
 import 'data/local/preferences_service.dart';
@@ -72,6 +74,16 @@ void main() async {
     ),
   );
 
+  // Initialize Firebase Cloud
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    debugPrint('Firebase Cloud initialized successfully');
+  } catch (e) {
+    debugPrint('Firebase Cloud offline-ready fallback: $e');
+  }
+
   PreferencesService? prefsService;
   try {
     prefsService = await PreferencesService.init();
@@ -81,15 +93,13 @@ void main() async {
 
   final dbService = DatabaseService();
 
-  // On first install, populate demo seed data matching the reference screenshot
+  // On first install, mark setup complete without forcing fake demo data
   if (prefsService != null && prefsService.isFirstLaunch) {
     try {
-      await dbService.seedInitialData();
-      await prefsService.setInitialBalance(810000.0);
-      await prefsService.setSeedDataLoaded(true);
+      await prefsService.setInitialBalance(0.0);
       await prefsService.setFirstLaunchCompleted();
     } catch (e) {
-      debugPrint('First launch seed notice: $e');
+      debugPrint('First launch setup notice: $e');
     }
   }
 
